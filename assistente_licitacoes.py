@@ -3,114 +3,120 @@ from datetime import datetime
 
 # --- Configuração da Página ---
 st.set_page_config(layout="wide")
-st.title("Assistente de Licitações 6.0 - Montador de Documentos")
-st.caption("Construção guiada e inteligente de artefatos de contratação, baseada nos modelos da AGU.")
+st.title("Assistente de Licitações 6.1 - Montador de Alta Fidelidade")
+st.caption("Construção guiada do Termo de Referência (Compras), espelhando o modelo oficial da AGU.")
 
-# Inicializar o session_state para guardar os inputs
-if 'tr_inputs' not in st.session_state:
-    st.session_state.tr_inputs = {}
+# --- Inicialização do Estado da Sessão ---
+if 'tr' not in st.session_state:
+    st.session_state.tr = {}
 
-# --- Estrutura de Abas ---
-tab1, tab2, tab3 = st.tabs(["Fase 1: Construção do Termo de Referência", "Fase 2: Seleção do Fornecedor", "Fase 3: Gestão do Contrato"])
+# --- Aba Única para Foco Total na Construção do TR ---
+st.header("Construtor Guiado do Termo de Referência (Modelo: Compras)")
+st.info("Siga os 14 tópicos abaixo, baseados no modelo oficial da AGU. Preencha apenas os campos editáveis.")
 
-# --- FASE 1: CONSTRUÇÃO DO TERMO DE REFERÊNCIA ---
-with tab1:
-    st.header("Montador Guiado do Termo de Referência (Modelo: Compras)")
-    st.info("Siga os passos abaixo. O assistente irá exibir o texto fixo do modelo e solicitar apenas as informações necessárias.")
+with st.form("tr_completo_form"):
+    # --- Tópicos do Termo de Referência ---
+    
+    st.markdown("---")
+    st.subheader("Tópico 1: DO OBJETO")
+    st.info("Nota Explicativa: Descrever o objeto de forma precisa, sem especificações excessivas ou direcionamento de marca.")
+    st.session_state.tr['objeto'] = st.text_area("1.1. Especifique aqui o objeto da contratação (Ex: Aquisição de material de escritório).", key=1.1)
 
-    # --- Passo 1: Contextualização ---
-    st.subheader("Passo 1: Contextualização da Compra")
-    st.session_state.tr_inputs['exige_amostra'] = st.toggle(
-        "A contratação exigirá apresentação de amostra?", 
-        help="Marque esta opção se a avaliação de amostras for indispensável para verificar o atendimento das especificações."
-    )
+    st.markdown("---")
+    st.subheader("Tópico 2: DA FUNDAMENTAÇÃO E JUSTIFICATIVA DA CONTRATAÇÃO")
+    st.info("Nota Explicativa: Detalhar a necessidade da contratação, demonstrando o alinhamento com o planejamento e o interesse público.")
+    st.session_state.tr['justificativa'] = st.text_area("2.1. Descreva a justificativa para a aquisição.", height=200, key=2.1)
 
-    # --- Passo 2: Construção Guiada do Documento ---
-    st.subheader("Passo 2: Preenchimento das Seções do TR")
+    st.markdown("---")
+    st.subheader("Tópico 3: DOS REQUISITOS DA CONTRATAÇÃO")
+    st.info("Nota Explicativa: Detalhar todos os requisitos essenciais para o pleno atendimento da necessidade.")
+    st.session_state.tr['requisitos'] = st.text_area("3.1. Especifique os requisitos do material/serviço (qualidade, desempenho, etc.).", key=3.1)
+    
+    st.markdown("---")
+    st.subheader("Tópico 4: DO LOCAL E DAS CONDIÇÕES DE ENTREGA DO OBJETO")
+    st.session_state.tr['local_entrega'] = st.text_input("4.1. Local de entrega dos bens:", key=4.1)
+    st.session_state.tr['prazo_entrega'] = st.text_input("4.2. Prazo de entrega (ex: 30 dias corridos).", key=4.2)
+    st.session_state.tr['marco_inicial_prazo'] = st.text_input("4.2.1. Marco inicial da contagem do prazo (ex: a partir da assinatura do contrato).", key=4.21)
 
-    # Usando st.form para agrupar os inputs
-    with st.form("tr_builder_form"):
-        # TÓPICO 1: OBJETO
-        st.markdown("---")
-        st.markdown("#### Tópico 1: DO OBJETO")
-        st.markdown(
-            "**Texto Fixo do Modelo:**\n"
-            "```\n"
-            "1.1. O presente Termo de Referência tem por objeto a aquisição de [NOME GENÉRICO DO BEM], conforme condições e especificações constantes neste instrumento e em seus Anexos.\n"
-            "```"
-        )
-        st.session_state.tr_inputs['objeto_especificacoes'] = st.text_area(
-            "**Campo Editável:** Detalhe as especificações, quantidades e condições do objeto.",
-            height=150,
-            help="Descreva de forma precisa, suficiente e clara, sem indicar marcas. Baseado no Item 2 dos modelos."
-        )
+    st.markdown("---")
+    st.subheader("Tópico 5: DAS OBRIGAÇÕES DA CONTRATANTE")
+    st.info("Texto Fixo: As obrigações listadas no modelo da AGU (itens 5.1 a 5.6) serão adicionadas automaticamente ao documento final.")
 
-        # TÓPICO 4: CONDIÇÕES DE ENTREGA
-        st.markdown("---")
-        st.markdown("#### Tópico 4: DO LOCAL E DAS CONDIÇÕES DE ENTREGA DO OBJETO")
-        st.markdown(
-            "**Texto Fixo do Modelo:**\n"
-            "```\n"
-            "4.1. O local de entrega dos bens é [ENDEREÇO COMPLETO].\n"
-            "4.2. O prazo de entrega será de [PRAZO EM DIAS] dias, contados do(a) [DEFINIR MARCO INICIAL].\n"
-            "```"
-        )
-        col1, col2 = st.columns(2)
-        with col1:
-            st.session_state.tr_inputs['local_entrega'] = st.text_input("**Campo Editável:** Insira o endereço completo de entrega.")
-        with col2:
-            st.session_state.tr_inputs['prazo_entrega'] = st.number_input("**Campo Editável:** Prazo de entrega (em dias).", min_value=1, step=1)
-        st.info("**Nota Explicativa:** O marco inicial para contagem do prazo (ex: assinatura do contrato, emissão da nota de empenho) deve ser definido de forma clara.")
+    st.markdown("---")
+    st.subheader("Tópico 6: DAS OBRIGAÇÕES DA CONTRATADA")
+    st.info("Texto Fixo: As obrigações listadas no modelo da AGU (itens 6.1 a 6.14) serão adicionadas automaticamente ao documento final.")
 
-        # SEÇÃO CONDICIONAL: AMOSTRAS
-        if st.session_state.tr_inputs['exige_amostra']:
-            st.markdown("---")
-            st.markdown("#### Tópico 4.X: DA APRESENTAÇÃO DE AMOSTRAS (Seção Condicional)")
-            st.warning("Você indicou a necessidade de amostras. Preencha as regras abaixo.")
-            st.session_state.tr_inputs['prazo_amostra'] = st.text_input(
-                "**Campo Editável:** Prazo e local para apresentação das amostras pelo licitante vencedor."
-            )
+    st.markdown("---")
+    st.subheader("Tópico 7: DA SUBCONTRATAÇÃO")
+    st.info("Nota Explicativa: A subcontratação é vedada para o objeto principal. Indique se será permitida para partes acessórias.")
+    st.session_state.tr['subcontratacao'] = st.radio("Será admitida a subcontratação de partes acessórias?", ["Não", "Sim"], horizontal=True, key=7)
 
-        # Botão de submissão do formulário
-        submitted = st.form_submit_button("Gerar Documento Final")
+    st.markdown("---")
+    st.subheader("Tópico 8: DO MODELO DE GESTÃO DO CONTRATO E CRITÉRIOS DE MEDIÇÃO E PAGAMENTO")
+    st.session_state.tr['fiscal_contrato'] = st.text_input("8.1. Indique o servidor ou unidade responsável pela fiscalização do contrato.", key=8.1)
+    st.session_state.tr['criterios_pagamento'] = st.text_area("8.2. Descreva os critérios de medição e as condições de pagamento.", key=8.2)
 
-    # --- Passo 3: Geração do Documento Final ---
-    if submitted:
-        st.subheader("Passo 3: Documento Gerado")
-        
-        # Montagem do documento final
-        documento_final = "TERMO DE REFERÊNCIA (Versão Gerada pelo Assistente)\n"
-        documento_final += "="*60 + "\n\n"
-        
-        # Seção 1
-        documento_final += "1. DO OBJETO\n"
-        documento_final += "1.1. O presente Termo de Referência tem por objeto a aquisição de bens, conforme especificações abaixo:\n"
-        documento_final += f"{st.session_state.tr_inputs.get('objeto_especificacoes', '[ESPECIFICAÇÕES NÃO PREENCHIDAS]')}\n\n"
+    st.markdown("---")
+    st.subheader("Tópico 9: DOS CRITÉRIOS DE SELEÇÃO DO FORNECEDOR")
+    st.info("Texto Fixo: Será adotado o critério de julgamento por MENOR PREÇO.")
+    st.session_state.tr['exigencias_habilitacao'] = st.text_area("9.1. Descreva eventuais requisitos de habilitação adicionais, se estritamente necessários e justificados.", key=9.1)
+    
+    st.markdown("---")
+    st.subheader("Tópico 10: DA ESTIMATIVA DE PREÇOS E DOS PREÇOS REFERENCIAIS")
+    st.info("Nota Explicativa: O valor estimado deve ser anexado ao TR, com a devida pesquisa de preços que o fundamenta.")
+    st.session_state.tr['valor_estimado'] = st.text_input("10.1. Informe o valor total estimado da contratação (Ex: R$ 15.000,00).", key=10.1)
 
-        # Seção 4
-        documento_final += "4. DO LOCAL E DAS CONDIÇÕES DE ENTREGA DO OBJETO\n"
-        documento_final += f"4.1. O local de entrega dos bens é: {st.session_state.tr_inputs.get('local_entrega', '[ENDEREÇO NÃO PREENCHIDO]')}\n"
-        documento_final += f"4.2. O prazo de entrega será de {st.session_state.tr_inputs.get('prazo_entrega', '[PRAZO NÃO PREENCHIDO]')} dias.\n\n"
+    st.markdown("---")
+    st.subheader("Tópico 11: DO REGIME DE EXECUÇÃO")
+    st.info("Texto Fixo: O regime de execução será o de Empreitada por Preço Unitário.")
 
-        # Seção Condicional de Amostras
-        if st.session_state.tr_inputs.get('exige_amostra'):
-            documento_final += "4.X. DA APRESENTAÇÃO DE AMOSTRAS\n"
-            documento_final += f"As amostras deverão ser apresentadas conforme as seguintes condições: {st.session_state.tr_inputs.get('prazo_amostra', '[CONDIÇÕES NÃO PREENCHIDAS]')}\n\n"
-        
-        st.info("Abaixo está a prévia do seu documento. Use o botão para fazer o download.")
-        st.text_area("Prévia do Documento", documento_final, height=300)
+    st.markdown("---")
+    st.subheader("Tópico 12: DA ADEQUAÇÃO ORÇAMENTÁRIA")
+    st.session_state.tr['dotacao_orcamentaria'] = st.text_input("12.1. Indique a dotação orçamentária que fará face à despesa.", key=12.1)
 
-        st.download_button(
-            label="📥 Baixar Termo de Referência (.txt)",
-            data=documento_final,
-            file_name=f"TR_Gerado_{datetime.now().strftime('%Y%m%d')}.txt"
-        )
+    st.markdown("---")
+    st.subheader("Tópico 13: DA EQUIPE DE PLANEJAMENTO")
+    st.info("Texto Fixo: A equipe de planejamento foi composta pelos servidores listados no Despacho/Portaria [NÚMERO].")
+    
+    st.markdown("---")
+    st.subheader("Tópico 14: DECLARAÇÃO DE VIABILIDADE")
+    st.info("Texto Fixo: A Contratante declara que a contratação é VIÁVEL.")
 
-# --- FASE 2 e 3 ---
-with tab2:
-    st.header("Módulos da Fase de Seleção do Fornecedor")
-    st.info("Em breve: Montador Guiado do Edital.")
+    # Botão de submissão
+    submitted = st.form_submit_button("Gerar Documento Completo do Termo de Referência")
 
-with tab3:
-    st.header("Módulos da Fase de Gestão Contratual")
-    st.info("Em breve: Montador Guiado para Termos Aditivos.")
+if submitted:
+    st.balloons()
+    st.header("Documento Final Gerado")
+    
+    # Montagem do Documento Completo
+    doc = []
+    doc.append("TERMO DE REFERÊNCIA (COMPRAS)")
+    doc.append("="*40)
+    
+    # Adicionando cada seção ao documento final
+    doc.append(f"1. DO OBJETO\n1.1. {st.session_state.tr.get('objeto', '[NÃO PREENCHIDO]')}")
+    doc.append(f"2. DA FUNDAMENTAÇÃO E JUSTIFICATIVA\n2.1. {st.session_state.tr.get('justificativa', '[NÃO PREENCHIDO]')}")
+    doc.append(f"3. DOS REQUISITOS DA CONTRATAÇÃO\n3.1. {st.session_state.tr.get('requisitos', '[NÃO PREENCHIDO]')}")
+    doc.append(f"4. DO LOCAL E DAS CONDIÇÕES DE ENTREGA\n4.1. Local: {st.session_state.tr.get('local_entrega', '[NÃO PREENCHIDO]')}\n4.2. Prazo: {st.session_state.tr.get('prazo_entrega', '[NÃO PREENCHIDO]')}\n4.2.1. Marco Inicial: {st.session_state.tr.get('marco_inicial_prazo', '[NÃO PREENCHIDO]')}")
+    
+    # Seções com texto fixo
+    doc.append("5. DAS OBRIGAÇÕES DA CONTRATANTE\n(Conforme modelo padrão da AGU)")
+    doc.append("6. DAS OBRIGAÇÕES DA CONTRATADA\n(Conforme modelo padrão da AGU)")
+    
+    # Seção condicional
+    subcontratacao_texto = "Não será admitida a subcontratação." if st.session_state.tr.get('subcontratacao') == "Não" else "Será admitida a subcontratação de partes acessórias, mediante aprovação da Contratante."
+    doc.append(f"7. DA SUBCONTRATAÇÃO\n7.1. {subcontratacao_texto}")
+    
+    doc.append(f"8. DO MODELO DE GESTÃO DO CONTRATO\n8.1. Fiscal: {st.session_state.tr.get('fiscal_contrato', '[NÃO PREENCHIDO]')}\n8.2. Pagamento: {st.session_state.tr.get('criterios_pagamento', '[NÃO PREENCHIDO]')}")
+    doc.append(f"9. DOS CRITÉRIOS DE SELEÇÃO DO FORNECEDOR\n9.1. Critério de Julgamento: Menor Preço.\n9.2. Requisitos adicionais de habilitação: {st.session_state.tr.get('exigencias_habilitacao', 'Não se aplica.')}")
+    doc.append(f"10. DA ESTIMATIVA DE PREÇOS\n10.1. Valor Estimado: {st.session_state.tr.get('valor_estimado', '[NÃO PREENCHIDO]')}. A pesquisa de preços consta em anexo.")
+    doc.append("11. DO REGIME DE EXECUÇÃO\n11.1. O regime de execução será o de Empreitada por Preço Unitário.")
+    doc.append(f"12. DA ADEQUAÇÃO ORÇAMENTÁRIA\n12.1. Dotação: {st.session_state.tr.get('dotacao_orcamentaria', '[NÃO PREENCHIDO]')}")
+    doc.append("13. DA EQUIPE DE PLANEJAMENTO\n(Conforme ato de designação)")
+    doc.append("14. DECLARAÇÃO DE VIABILIDADE\n14.1. A Contratante declara que a contratação é VIÁVEL.")
+
+    documento_final_str = "\n\n".join(doc)
+
+    st.text_area("Prévia do Documento Completo", documento_final_str, height=400)
+    st.download_button("📥 Baixar TR Completo (.txt)", documento_final_str, f"TR_COMPRAS_{datetime.now().strftime('%Y%m%d')}.txt")
