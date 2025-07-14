@@ -4,15 +4,16 @@ from datetime import datetime
 
 # --- Configuração da Página ---
 st.set_page_config(layout="wide")
-st.title("Assistente de Licitações 7.0 - Integração CATMAT/CATSER")
+st.title("Assistente de Licitações 7.1 - Integração Simplificada")
 st.caption("Construção de TR com busca inteligente e padronização de itens.")
 
-# --- Carregamento e Cache dos Catálogos ---
+# --- Carregamento e Cache dos Catálogos com NOMES SIMPLIFICADOS ---
 @st.cache_data
 def load_data():
     try:
-        catmat_df = pd.read_csv("CATMAT-Maio2025.xlsx - Materiais.csv", sep=';', encoding='latin1', low_memory=False)
-        catser_df = pd.read_csv("catser (3).xlsx - Lista CATSER.csv", sep=';', encoding='latin1', low_memory=False)
+        # O código agora procura pelos nomes simples: "catmat.csv" e "catser.csv"
+        catmat_df = pd.read_csv("catmat.csv", sep=';', encoding='latin1', low_memory=False)
+        catser_df = pd.read_csv("catser.csv", sep=';', encoding='latin1', low_memory=False)
         return catmat_df, catser_df
     except FileNotFoundError:
         return None, None
@@ -27,7 +28,8 @@ if 'selected_item_key' not in st.session_state:
 
 # --- Aba de Construção do TR ---
 if catmat_df is None or catser_df is None:
-    st.error("ERRO CRÍTICO: Os arquivos `CATMAT-Maio2025.xlsx - Materiais.csv` e `catser (3).xlsx - Lista CATSER.csv` não foram encontrados. Por favor, envie-os para o repositório do GitHub junto com o código do aplicativo.")
+    # A mensagem de erro agora reflete os novos nomes de arquivo
+    st.error("ERRO CRÍTICO: Os arquivos `catmat.csv` e `catser.csv` não foram encontrados. Por favor, renomeie os arquivos no seu computador e envie-os para o repositório do GitHub.")
 else:
     st.header("Construtor Guiado do Termo de Referência")
     st.info("Utilize a busca inteligente para encontrar e adicionar itens padronizados do CATMAT/CATSER à sua tabela.")
@@ -48,18 +50,16 @@ else:
         if keyword:
             resultados = df_selecionado[df_selecionado[col_desc].str.contains(keyword, case=False, na=False)]
             if not resultados.empty:
-                # Criar uma lista de opções para o selectbox
                 opcoes = [f"{row[col_codigo]} - {row[col_desc]}" for index, row in resultados.iterrows()]
                 item_selecionado_str = st.selectbox("Selecione o item desejado nos resultados da busca:", options=["Selecione um item..."] + opcoes)
 
                 if item_selecionado_str != "Selecione um item...":
-                    # Extrair o código do item selecionado e encontrar os detalhes
                     codigo_selecionado = int(item_selecionado_str.split(' - ')[0])
                     detalhe_item = df_selecionado[df_selecionado[col_codigo] == codigo_selecionado].iloc[0]
                     
                     st.session_state.item_cat_code = detalhe_item[col_codigo]
                     st.session_state.item_cat_desc = detalhe_item[col_desc]
-                    st.session_state.item_cat_unid = detalhe_item.get(col_unid, "UN") # Usar 'UN' como padrão se a coluna não existir
+                    st.session_state.item_cat_unid = detalhe_item.get(col_unid, "UN")
 
     # --- Seção para Adicionar o Item Selecionado ---
     with st.container(border=True):
@@ -86,7 +86,6 @@ else:
                 st.success(f"Item '{st.session_state.item_cat_desc}' adicionado!")
         else:
             st.info("Busque e selecione um item no catálogo acima para poder adicioná-lo.")
-
 
     # --- Exibição da Tabela de Itens Construída ---
     if st.session_state.tr_itens:
