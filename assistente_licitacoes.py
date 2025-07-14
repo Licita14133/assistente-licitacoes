@@ -1,97 +1,112 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 # --- Configuração da Página ---
 st.set_page_config(layout="wide")
-st.title("Assistente de Licitações 3.1 (Refinado)")
-st.caption("Um sistema especialista para apoiar o ciclo de vida da contratação pública.")
+st.title("Assistente de Licitações 4.0 - Auditor Proativo")
+st.caption("Análise de conformidade e geração de relatório para a contratação pública.")
 
 # --- Estrutura de Abas ---
 tab1, tab2, tab3 = st.tabs(["Fase 1: Planejamento", "Fase 2: Seleção do Fornecedor", "Fase 3: Gestão do Contrato"])
 
 # --- FASE 1: PLANEJAMENTO ---
 with tab1:
-    st.header("Módulos da Fase de Planejamento")
+    st.header("Análise de Conformidade da Fase Preparatória")
+    st.info("Preencha os itens abaixo. Ao final, gere um relatório de análise com apontamentos e recomendações.")
+
+    with st.container(border=True):
+        st.subheader("Documento de Formalização da Demanda (DFD) e ETP")
+        
+        # Usamos o session_state para guardar o estado dos checkboxes
+        st.checkbox("A autoridade competente autorizou formalmente a abertura do processo?", key="p1")
+        st.checkbox("A necessidade da contratação está justificada, com base no interesse público?", key="p2")
+        st.checkbox("Os requisitos da contratação (quantidades, prazos, especificações) estão claros e tecnicamente fundamentados no ETP/TR?", key="p3")
+        st.checkbox("O levantamento de mercado analisou e comparou diferentes soluções para atender à necessidade?", key="p4")
+        st.checkbox("A estimativa de valor da contratação foi baseada em pesquisa de mercado ampla e documentada?", key="p5")
+        st.checkbox("A Declaração de Disponibilidade Orçamentária (DDO) foi emitida e anexada ao processo?", key="p6")
     
-    with st.expander("Checklist do ETP e Termo de Referência (TR)", expanded=True):
-        st.info("Verificações refinadas com base nos documentos de ETP, TR e Autorização fornecidos.")
-        st.checkbox("O processo foi iniciado com a devida autorização da autoridade competente?")
-        st.checkbox("A necessidade da contratação e a previsão no Plano de Contratações Anual estão justificadas? (Baseado no Item 3 do TR)")
-        st.checkbox("A descrição do objeto é precisa, suficiente e clara, evitando especificações restritivas? (Item 2 do TR)")
-        st.checkbox("O Modelo de Proposta de Preços foi definido e anexado ao TR?")
-        st.checkbox("Os critérios de medição e as regras de pagamento estão claramente definidos? (Item 9 do TR)")
-        st.checkbox("As responsabilidades da Contratante e da Contratada estão bem estabelecidas? (Item 10 do TR)")
-        st.checkbox("A estimativa de preços foi anexada e contém pesquisa de mercado ampla? (Baseado nos arquivos de cotação)")
+    st.write("---")
 
-    with st.expander("Ferramenta de Análise de Pesquisa de Preços"):
-        st.info("Faça o upload do seu arquivo .csv com as cotações de preços para análise automática.")
-        # O código do uploader continua o mesmo
-        uploaded_file = st.file_uploader("Selecione o arquivo CSV", type="csv", key="price_uploader")
-        if uploaded_file is not None:
-            try:
-                df = pd.read_csv(uploaded_file, sep=';', decimal=',')
-                if 'Valor' in df.columns:
-                    df['Valor_Numerico'] = df['Valor'].astype(str).str.replace('R$', '', regex=False).str.replace('.', '', regex=False).str.strip()
-                    df['Valor_Numerico'] = pd.to_numeric(df['Valor_Numerico'], errors='coerce')
-                    df.dropna(subset=['Valor_Numerico'], inplace=True)
-                    media = df['Valor_Numerico'].mean()
-                    mediana = df['Valor_Numerico'].median()
-                    menor_valor = df['Valor_Numerico'].min()
-                    st.subheader("Análise das Cotações")
-                    col1, col2, col3 = st.columns(3)
-                    col1.metric("Preço Médio", f"R$ {media:,.2f}")
-                    col2.metric("Mediana", f"R$ {mediana:,.2f}")
-                    col3.metric("Menor Valor", f"R$ {menor_valor:,.2f}")
-                    st.dataframe(df)
-                else:
-                    st.error("Erro: O arquivo CSV precisa ter uma coluna chamada 'Valor'.")
-            except Exception as e:
-                st.error(f"Ocorreu um erro ao processar o arquivo: {e}")
+    # Botão para gerar a análise
+    if st.button("Gerar Análise de Conformidade da Fase de Planejamento", type="primary"):
+        apontamentos = []
 
-# --- FASE 2: SELEÇÃO DO FORNECEDOR ---
+        # Lógica de Análise
+        if not st.session_state.p1:
+            apontamentos.append({
+                "nivel": "CRÍTICO",
+                "item": "Autorização da Autoridade Competente",
+                "fundamentacao": "A ausência de autorização formal para iniciar a contratação fere o princípio da legalidade e pode invalidar todo o processo (Art. 18, Lei 14.133).",
+                "recomendacao": "Providenciar o despacho de autorização da autoridade competente e juntá-lo aos autos."
+            })
+        if not st.session_state.p2:
+            apontamentos.append({
+                "nivel": "CRÍTICO",
+                "item": "Justificativa da Necessidade",
+                "fundamentacao": "A justificativa da necessidade é o pilar da contratação e requisito obrigatório do ETP (Art. 18, § 1º, I, Lei 14.133).",
+                "recomendacao": "Detalhar no ETP/TR a motivação e o interesse público que fundamentam a contratação, sob pena de nulidade."
+            })
+        if not st.session_state.p3:
+            apontamentos.append({
+                "nivel": "CRÍTICO",
+                "item": "Requisitos da Contratação",
+                "fundamentacao": "A definição imprecisa dos requisitos impede a formulação de propostas adequadas e a correta execução do objeto (Art. 6º, XXIII, 'd', Lei 14.133).",
+                "recomendacao": "Revisar o ETP/TR para garantir que todos os requisitos, quantidades e especificações do objeto estejam claros e bem definidos."
+            })
+        if not st.session_state.p5:
+            apontamentos.append({
+                "nivel": "ALERTA",
+                "item": "Pesquisa de Mercado",
+                "fundamentacao": "Uma pesquisa de preços deficiente ou mal documentada pode levar a contratações com sobrepreço e ser questionada pelos órgãos de controle (Art. 23, Lei 14.133).",
+                "recomendacao": "Garantir que a pesquisa de preços foi ampla, utilizando diversas fontes (conforme IN aplicável), e que toda a documentação comprobatória está nos autos."
+            })
+        if not st.session_state.p6:
+            apontamentos.append({
+                "nivel": "CRÍTICO",
+                "item": "Disponibilidade Orçamentária (DDO)",
+                "fundamentacao": "Nenhuma contratação pode ser realizada sem a prévia indicação de recursos orçamentários para fazer face à despesa (Art. 16, I, LRF e Art. 18, IV, Lei 14.133).",
+                "recomendacao": "Solicitar e anexar ao processo a Declaração de Disponibilidade Orçamentária (DDO) emitida pelo setor competente."
+            })
+
+        st.subheader("Resultado da Análise")
+
+        # Exibindo o relatório na tela
+        if not apontamentos:
+            st.success("✅ **Análise Concluída:** Nenhum ponto crítico ou de alerta foi identificado. A fase preparatória parece estar em conformidade.")
+            texto_relatorio = "Análise Concluída: Nenhum ponto crítico ou de alerta foi identificado."
+        else:
+            st.error(f"🚨 **Análise Concluída:** Foram encontrados {len(apontamentos)} apontamentos. É necessário revisar os itens abaixo.")
+            
+            texto_relatorio = f"RELATÓRIO DE ANÁLISE DE CONFORMIDADE - FASE DE PLANEJAMENTO\n"
+            texto_relatorio += f"Gerado em: {datetime.now().strftime('%d/%m/%Y %H:%M:%S')}\n"
+            texto_relatorio += "="*80 + "\n\n"
+
+            for apontamento in apontamentos:
+                cor = "red" if apontamento["nivel"] == "CRÍTICO" else "orange"
+                st.markdown(f"<p style='color:{cor};'><strong>[{apontamento['nivel']}] - {apontamento['item']}</strong></p>", unsafe_allow_html=True)
+                st.markdown(f"**Fundamentação:** {apontamento['fundamentacao']}")
+                st.markdown(f"**Recomendação:** {apontamento['recomendacao']}")
+                st.write("---")
+
+                # Montando o texto para o arquivo de download
+                texto_relatorio += f"[{apontamento['nivel']}] - {apontamento['item']}\n"
+                texto_relatorio += f"  - Fundamentação: {apontamento['fundamentacao']}\n"
+                texto_relatorio += f"  - Recomendação: {apontamento['recomendacao']}\n\n"
+
+            # Botão para download do relatório
+            st.download_button(
+                label="📥 Baixar Relatório de Apontamentos (.txt)",
+                data=texto_relatorio,
+                file_name=f"Relatorio_Conformidade_Planejamento_{datetime.now().strftime('%Y%m%d')}.txt",
+                mime="text/plain"
+            )
+
+# --- FASE 2 e 3 (mantemos a estrutura, mas o foco do refinamento foi na Fase 1) ---
 with tab2:
     st.header("Módulos da Fase de Seleção do Fornecedor")
+    st.write("Módulos de análise do Edital e Habilitação serão refinados em breve.")
 
-    with st.expander("Atos Preparatórios da Fase de Seleção"):
-         st.checkbox("A Comissão de Contratação (ou agente/pregoeiro) foi formalmente designada por portaria?")
-    
-    with st.expander("Checklist de Conformidade do Edital"):
-        st.checkbox("O objeto no Edital está idêntico ao do Termo de Referência? (Item 1 do Edital)")
-        st.checkbox("As regras e prazos para impugnação e esclarecimentos estão claras? (Item 6 do Edital)")
-        st.checkbox("Os critérios de julgamento da proposta (ex: menor preço) estão definidos objetivamente? (Item 9 do Edital)")
-
-    with st.expander("Assistente de Habilitação", expanded=True):
-        st.info("Guia para análise dos documentos, conforme Edital e Lei 14.133.")
-        
-        st.subheader("Qualificação Fiscal, Social e Trabalhista (Item 10.3 do Edital)")
-        st.checkbox("Prova de regularidade para com a Fazenda Federal (Certidão de Débitos Federais e Dívida Ativa da União).")
-        st.checkbox("Prova de regularidade com o Fundo de Garantia do Tempo de Serviço (FGTS) - CRF.")
-        st.checkbox("Prova de inexistência de débitos inadimplidos perante a Justiça do Trabalho (CNDT).")
-
-        st.subheader("Qualificação Econômico-Financeira (Item 10.4 do Edital)")
-        st.checkbox("Apresentou certidão negativa de falência ou recuperação judicial?")
-
-# --- FASE 3: GESTÃO DO CONTRATO ---
 with tab3:
     st.header("Módulos da Fase de Gestão Contratual")
-    st.info("Ferramentas para apoiar o fiscal do contrato nos eventos da execução contratual.")
-
-    with st.expander("Fiscalização de Rotina"):
-        st.checkbox("O serviço/bem foi entregue conforme as especificações do contrato?")
-        st.checkbox("A Nota Fiscal foi recebida e atestada?")
-        st.checkbox("O pagamento foi realizado no prazo correto?")
-
-    with st.expander("Fluxo de Trabalho: Apostilamento", expanded=True):
-        st.info("Checklist baseado na sequência de documentos do processo de apostilamento.")
-        st.checkbox("1. O fiscal do contrato solicitou a alteração via Ofício, justificando a necessidade?")
-        st.checkbox("2. A autoridade competente exarou despacho favorável à alteração?")
-        st.checkbox("3. A Declaração de Disponibilidade Orçamentária (DDO) foi emitida para a nova dotação?")
-        st.checkbox("4. O Termo de Apostilamento foi elaborado, assinado e publicado?")
-
-    with st.expander("Fluxo de Trabalho: Repactuação de Preços"):
-        st.write("Guia para análise de pedidos de repactuação em contratos de serviço com mão de obra exclusiva.")
-        st.checkbox("1. A empresa protocolou o pedido formal de repactuação?")
-        st.checkbox("2. O pedido foi acompanhado da nova Convenção Coletiva de Trabalho (CCT)?")
-        st.checkbox("3. A nova planilha de custos foi apresentada, demonstrando o impacto analítico da CCT?")
-        st.checkbox("4. A análise técnica da planilha foi concluída pela equipe de planejamento?")
-        st.checkbox("5. A decisão sobre o pedido foi formalizada pela autoridade competente?")
+    st.write("Módulos de Repactuação e Apostilamento serão refinados em breve.")
