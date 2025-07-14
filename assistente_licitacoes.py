@@ -31,7 +31,7 @@ with st.container(border=True):
     with col3:
         item_qtd = st.number_input("Quantidade", min_value=1, step=1)
     with col4:
-        item_valor_unit = st.number_input("Valor Unitário (R$)", min_value=0.01, step=0.1, format="%.2f")
+        item_valor_unit = st.number_input("Valor Unitário (R$)", min_value=0.01, step=0.01, format="%.2f")
 
     if st.button("Adicionar Item à Tabela", type="primary"):
         if item_desc: # Adiciona apenas se a descrição não estiver vazia
@@ -51,11 +51,12 @@ with st.container(border=True):
 if st.session_state.tr_itens:
     st.markdown("##### Tabela de Itens da Contratação:")
     df_itens = pd.DataFrame(st.session_state.tr_itens)
-    st.dataframe(df_itens, use_container_width=True)
+    st.dataframe(df_itens, use_container_width=True, hide_index=True)
     
-    valor_total_contratacao = df_itens["Valor Total (R$)_"].sum()
+    # AQUI ESTÁ A CORREÇÃO: Removido o "_" extra no final da string.
+    valor_total_contratacao = df_itens["Valor Total (R$)"].sum()
+    
     st.success(f"**Valor Total Estimado da Contratação: R$ {valor_total_contratacao:,.2f}**")
-    # Salva o valor total para uso posterior
     st.session_state.tr_inputs['valor_total_calculado'] = f"R$ {valor_total_contratacao:,.2f}"
 
 # --- Demais Tópicos do Termo de Referência ---
@@ -63,27 +64,22 @@ with st.form("tr_demais_topicos_form"):
     st.markdown("---")
     st.subheader("Demais Tópicos do Termo de Referência")
 
-    # Os outros tópicos continuam aqui, como antes
     st.markdown("#### Tópico 2: DA FUNDAMENTAÇÃO E JUSTIFICATIVA DA CONTRATAÇÃO")
     st.session_state.tr_inputs['justificativa'] = st.text_area("2.1. Descreva a justificativa para a aquisição.", height=150, key=2.1)
+    
+    # Aqui entrariam os outros tópicos do 3 ao 14, conforme implementarmos...
 
-    # Adicione os outros 12 tópicos aqui de forma similar...
-    # ... (para manter a resposta concisa, os outros tópicos foram omitidos, mas o código completo os incluiria)
-
-    # Botão de submissão
     submitted = st.form_submit_button("Gerar Documento Completo do Termo de Referência")
 
 if submitted:
     st.balloons()
     st.header("Documento Final Gerado")
     
-    # Montagem do Documento Completo
     doc = []
     doc.append("TERMO DE REFERÊNCIA (COMPRAS)")
     doc.append("="*60)
     
-    # Seção 1: Objeto (agora com a tabela)
-    doc.append("1. DO OBJETO")
+    doc.append("\n1. DO OBJETO")
     doc.append("1.1. O presente Termo de Referência tem por objeto a aquisição dos bens detalhados na tabela abaixo:")
     if st.session_state.tr_itens:
         df_para_doc = pd.DataFrame(st.session_state.tr_itens)
@@ -92,12 +88,10 @@ if submitted:
     else:
         doc.append("[NENHUM ITEM ADICIONADO À TABELA]")
 
-    doc.append("\n2. DA FUNDAMENTAÇÃO E JUSTIFICATIVA")
+    doc.append("\n\n2. DA FUNDAMENTAÇÃO E JUSTIFICATIVA")
     doc.append(f"2.1. {st.session_state.tr_inputs.get('justificativa', '[NÃO PREENCHIDO]')}")
     
-    # ... (lógica para adicionar os outros tópicos ao documento) ...
-
-    documento_final_str = "\n\n".join(doc)
+    documento_final_str = "\n".join(doc)
 
     st.text_area("Prévia do Documento Completo", documento_final_str, height=400)
     st.download_button("📥 Baixar TR Completo (.txt)", documento_final_str, f"TR_COMPRAS_{datetime.now().strftime('%Y%m%d')}.txt")
