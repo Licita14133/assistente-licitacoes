@@ -4,113 +4,105 @@ from datetime import datetime
 
 # --- Configuração da Página ---
 st.set_page_config(layout="wide")
-st.title("Assistente de Licitações 5.0 - Construtor Guiado")
+st.title("Assistente de Licitações 5.1 - Intérprete da AGU")
 st.caption("Uma ferramenta especialista para a construção e análise de artefatos de contratação.")
 
 # --- Estrutura de Abas ---
 tab1, tab2, tab3 = st.tabs(["Fase 1: Planejamento (ETP/TR)", "Fase 2: Seleção do Fornecedor", "Fase 3: Gestão do Contrato"])
 
-# --- FASE 1: PLANEJAMENTO (Totalmente remodelada) ---
+# --- FASE 1: PLANEJAMENTO (Refinamento profundo) ---
 with tab1:
-    st.header("Construtor Guiado do Estudo Técnico Preliminar e Termo de Referência")
-    st.info("Responda às perguntas e preencha os campos para construir seu documento. O assistente fará análises e recomendações em tempo real.")
+    st.header("Construtor Guiado do Termo de Referência")
+    st.info("Responda às perguntas e preencha os campos. O assistente usará a lógica das notas explicativas da AGU para guiar você.")
 
-    # --- Perguntas de Contexto para Definir o Escopo ---
+    # --- Perguntas de Contexto ---
     st.subheader("1. Definição do Escopo da Contratação")
-    tipo_objeto = st.selectbox("Qual é a natureza do objeto?", ["Serviços", "Compras"])
+    tipo_objeto = st.selectbox("Qual é a natureza do objeto?", ["Selecione...", "Compras", "Serviços"])
     
     if tipo_objeto == "Serviços":
-        dedicacao_mo = st.radio(
-            "O serviço envolve dedicação exclusiva de mão de obra?",
-            ("Sim", "Não"), horizontal=True
-        )
+        dedicacao_mo = st.radio("O serviço envolve dedicação exclusiva de mão de obra?", ("Sim", "Não"), horizontal=True, key="mo")
 
     # --- Formulário para Construção do Documento ---
-    with st.form("etp_tr_form"):
-        st.subheader("2. Preenchimento Guiado do Documento")
+    if tipo_objeto != "Selecione...":
+        with st.form("tr_form_refinado"):
+            st.subheader("2. Preenchimento Guiado do Documento")
 
-        # Seção 2 do TR: Descrição do Objeto
-        st.markdown("##### Item 2: Objeto da Contratação")
-        objeto_desc = st.text_area("Descreva o objeto da contratação de forma precisa, suficiente e clara. Evite o uso de marcas.", height=100)
+            # Seção de Objeto
+            st.markdown("##### Seção 2: Objeto da Contratação")
+            objeto_desc = st.text_area("Descreva o objeto de forma precisa, suficiente e clara.", key="obj")
 
-        # Seção 3 do TR: Justificativa e Necessidade
-        st.markdown("##### Item 3: Justificativa e Necessidade")
-        justificativa_desc = st.text_area("Detalhe a necessidade da contratação, o problema a ser resolvido e o interesse público envolvido.", height=150)
-        
-        # O botão de submissão do formulário
-        submitted = st.form_submit_button("Analisar e Gerar Documento")
-
-        if submitted:
-            st.subheader("3. Análise de Conformidade e Geração do Documento")
+            # Seção de Justificativa
+            st.markdown("##### Seção 3: Justificativa e Necessidade")
+            justificativa_desc = st.text_area("Detalhe a necessidade da contratação e o interesse público envolvido.", key="just")
             
-            relatorio_analise = []
-            documento_final = ""
-
-            # --- Lógica de Análise ---
-            # Análise do Objeto
-            marcas_vedadas = ['dell', 'hp', 'microsoft', 'adobe', 'x-brand'] # Lista de exemplo
-            if any(marca in objeto_desc.lower() for marca in marcas_vedadas):
-                relatorio_analise.append({
-                    "nivel": "CRÍTICO",
-                    "item": "Descrição do Objeto",
-                    "apontamento": "Foi identificada a menção a uma marca específica. A indicação de marca é vedada, exceto em casos excepcionais e justificados (Art. 41, I, Lei 14.133).",
-                    "recomendacao": "Substitua a marca por especificações técnicas neutras e detalhadas que garantam a qualidade desejada sem restringir a competição."
-                })
-            elif len(objeto_desc) < 50:
-                 relatorio_analise.append({
-                    "nivel": "ALERTA",
-                    "item": "Descrição do Objeto",
-                    "apontamento": "A descrição do objeto parece muito sucinta.",
-                    "recomendacao": "Considere detalhar mais as especificações para garantir que os licitantes compreendam perfeitamente o que está sendo solicitado."
-                })
+            # Seção de Sustentabilidade (Com lógica da Nota Explicativa)
+            st.markdown("##### Seção 4: Critérios de Sustentabilidade")
+            st.info("""
+            **Nota Explicativa da AGU:** "A Administração deverá estabelecer critérios de sustentabilidade, conforme o art. 45 da Lei 14.133. 
+            A decisão de não os utilizar deve ser justificada nos autos."
+            """)
             
-            # Análise da Justificativa
-            if len(justificativa_desc) < 150:
-                relatorio_analise.append({
-                    "nivel": "CRÍTICO",
-                    "item": "Justificativa da Necessidade",
-                    "apontamento": "A justificativa é o pilar da contratação. Uma descrição com menos de 150 caracteres pode ser considerada insuficiente pelos órgãos de controle.",
-                    "recomendacao": "Detalhe o problema a ser resolvido, os resultados esperados e como a contratação se alinha ao planejamento do órgão (Art. 18, § 1º, I)."
-                })
-
-            # --- Exibição da Análise na Tela ---
-            if not relatorio_analise:
-                st.success("✅ **Análise Concluída:** Nenhum ponto de atenção foi identificado nos campos preenchidos.")
-            else:
-                st.error(f"🚨 **Análise Concluída:** Foram encontrados {len(relatorio_analise)} apontamentos. Revise os itens abaixo:")
-                for apontamento in relatorio_analise:
-                    cor = "red" if apontamento["nivel"] == "CRÍTICO" else "orange"
-                    st.markdown(f"<p style='color:{cor};'><strong>[{apontamento['nivel']}] - {apontamento['item']}</strong></p>", unsafe_allow_html=True)
-                    st.markdown(f"**Apontamento:** {apontamento['apontamento']}")
-                    st.markdown(f"**Recomendação:** {apontamento['recomendacao']}")
-                    st.write("---")
-
-            # --- Geração do Documento Final para Download ---
-            documento_final += "TERMO DE REFERÊNCIA (Versão Preliminar)\n"
-            documento_final += "="*40 + "\n\n"
-            documento_final += "1. OBJETO DA CONTRATAÇÃO\n"
-            documento_final += f"{objeto_desc}\n\n"
-            documento_final += "2. JUSTIFICATIVA E NECESSIDADE DA CONTRATAÇÃO\n"
-            documento_final += f"{justificativa_desc}\n\n"
-            
-            # Adiciona cláusula condicional baseada nas perguntas de contexto
-            if tipo_objeto == "Serviços" and dedicacao_mo == "Sim":
-                documento_final += "3. MODELO DE GESTÃO DO CONTRATO (Serviços com M.O. Exclusiva)\n"
-                documento_final += "[Detalhar aqui as regras de fiscalização para serviços com dedicação de mão de obra...]\n"
-
-            st.download_button(
-                label="📥 Baixar Documento Preliminar (.txt)",
-                data=documento_final,
-                file_name=f"TR_Preliminar_{datetime.now().strftime('%Y%m%d')}.txt",
-                mime="text/plain"
+            usa_sustentabilidade = st.radio(
+                "Serão exigidos critérios de sustentabilidade nesta contratação?",
+                ("Sim", "Não"), horizontal=True, key="sust"
             )
 
+            sust_criterios = ""
+            sust_justificativa_nao = ""
 
-# --- FASE 2 e 3 (mantemos a estrutura para desenvolvimento futuro) ---
+            if usa_sustentabilidade == "Sim":
+                sust_criterios = st.text_area("Descreva os critérios de sustentabilidade exigidos:", key="sust_sim")
+            else:
+                sust_justificativa_nao = st.text_area("Apresente a justificativa formal para a não utilização de critérios de sustentabilidade:", key="sust_nao")
+
+            # Botão de submissão
+            submitted = st.form_submit_button("Analisar e Gerar Documento")
+
+            if submitted:
+                st.subheader("3. Análise de Conformidade e Geração do Documento")
+                relatorio_analise = []
+                documento_final = ""
+
+                # --- Lógica de Análise Refinada ---
+                if len(objeto_desc) < 50:
+                    relatorio_analise.append({"nivel": "ALERTA", "item": "Objeto", "apontamento": "Descrição do objeto parece sucinta."})
+                
+                if len(justificativa_desc) < 150:
+                    relatorio_analise.append({"nivel": "CRÍTICO", "item": "Justificativa", "apontamento": "A justificativa da necessidade deve ser robusta e detalhada."})
+
+                # Análise da lógica de sustentabilidade
+                if usa_sustentabilidade == 'Não' and len(sust_justificativa_nao) < 50:
+                    relatorio_analise.append({
+                        "nivel": "CRÍTICO",
+                        "item": "Sustentabilidade",
+                        "apontamento": "A não utilização de critérios de sustentabilidade exige justificativa formal e fundamentada, que não foi preenchida ou é insuficiente.",
+                        "recomendacao": "Elabore uma justificativa detalhada para a não aplicação de critérios de sustentabilidade, conforme exigem a Lei 14.133 e a jurisprudência do TCU."
+                    })
+                
+                # --- Exibição da Análise ---
+                if not relatorio_analise:
+                    st.success("✅ **Análise Concluída:** Nenhum ponto crítico foi identificado.")
+                else:
+                    st.error(f"🚨 **Análise Concluída:** Foram encontrados {len(relatorio_analise)} apontamentos.")
+                    for apontamento in relatorio_analise:
+                        st.markdown(f"**[{apontamento['nivel']}] - {apontamento['item']}:** {apontamento['apontamento']}")
+                
+                # --- Geração do Documento Final ---
+                documento_final += f"2. OBJETO\n{objeto_desc}\n\n"
+                documento_final += f"3. JUSTIFICATIVA\n{justificativa_desc}\n\n"
+                documento_final += "4. CRITÉRIOS DE SUSTENTABILIDADE\n"
+                if usa_sustentabilidade == "Sim":
+                    documento_final += f"Serão aplicados os seguintes critérios de sustentabilidade: {sust_criterios}\n"
+                else:
+                    documento_final += f"Não serão aplicados critérios de sustentabilidade, conforme justificativa a seguir: {sust_justificativa_nao}\n"
+                
+                st.download_button("📥 Baixar Termo de Referência (.txt)", documento_final, f"TR_{datetime.now().strftime('%Y%m%d')}.txt")
+
+# --- FASE 2 e 3 ---
 with tab2:
     st.header("Módulos da Fase de Seleção do Fornecedor")
-    st.info("Em breve: Construtor Guiado do Edital e do Aviso de Contratação.")
+    st.info("Em breve: Construtor Guiado do Edital.")
 
 with tab3:
     st.header("Módulos da Fase de Gestão Contratual")
-    st.info("Em breve: Construtor Guiado para Termos Aditivos e de Apostilamento.")
+    st.info("Em breve: Construtor Guiado para Termos Aditivos.")
